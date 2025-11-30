@@ -1,0 +1,1151 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Victory Planner - Pharm Connection</title>
+    
+    <!-- React & ReactDOM -->
+    <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+    
+    <!-- Babel for JSX -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- Google Fonts: Noto Sans Thai -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <!-- Netlify Functions Helper -->
+    <script src="https://cdn.jsdelivr.net/npm/@netlify/functions@1.3.0/dist/netlify-functions.min.js"></script>
+
+    <style>
+        body {
+            font-family: 'Noto Sans Thai', sans-serif;
+            background-color: #f3f4f6;
+        }
+        
+        @media print {
+            body { background-color: white; }
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            .print-container { 
+                box-shadow: none; 
+                border: none; 
+                padding: 0;
+                margin: 0;
+                width: 100%;
+            }
+            @page { margin: 0.5cm; }
+        }
+        
+        .print-only { display: none; }
+        
+        /* Animation */
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useRef } = React;
+        
+        // --- Icon Wrapper ---
+        const Icon = ({ name, className }) => {
+            const iconRef = useRef(null);
+            useEffect(() => {
+                if (window.lucide) window.lucide.createIcons({ attrs: { class: className }, nameAttr: 'data-lucide' });
+            }, [name]);
+            return <i data-lucide={name} className={className}></i>;
+        };
+
+        // --- AI Chat Widget Component ---
+        const AIChatWidget = ({ formData, step, isOpen, onToggle, onSuggestionAccept }) => {
+            const [messages, setMessages] = useState([
+                { 
+                    role: 'assistant', 
+                    content: 'สวัสดีครับ! ผม Digital Victory Mentor พร้อมช่วยคุณวางแผนการตลาดครับ ผมเห็นข้อมูลที่คุณกรอกแล้วทั้งหมด ถ้าอยากได้ไอเดียหรือให้ผมช่วยเติมข้อมูล แค่ถามผมได้เลย! 🚀' 
+                }
+            ]);
+            const [inputValue, setInputValue] = useState('');
+            const [isLoading, setIsLoading] = useState(false);
+            const messagesEndRef = useRef(null);
+
+            const scrollToBottom = () => {
+                messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+            };
+
+            useEffect(() => {
+                scrollToBottom();
+            }, [messages]);
+
+            const getContextualPrompt = () => {
+                const context = {
+                    step: step,
+                    formData: formData,
+                    track: formData.productTrack
+                };
+
+                let stepSpecificPrompt = '';
+                switch(step) {
+                    case 1:
+                        stepSpecificPrompt = formData.productTrack 
+                            ? `ผู้ใช้อยู่ใน Step 1: Setup แล้วเลือก ${formData.productTrack} track แล้ว ช่วยแนะนำชื่อสินค้าหรือกลยุทธ์ที่เหมาะสม และสามารถเสนอข้อมูลให้กรอกในฟอร์มได้`
+                            : `ผู้ใช้อยู่ใน Step 1: Setup ยังไม่ได้เลือก track ช่วยแนะนำให้เลือกระหว่าง B2C (Consumer) หรือ B2B (HCP)`;
+                        break;
+                    case 2:
+                        stepSpecificPrompt = `ผู้ใช้อยู่ใน Step 2: Persona สำหรับ ${formData.productTrack} track ช่วยแนะนำตัวอย่าง persona และ pain points ที่เหมาะสม และสามารถเสนอข้อมูลให้กรอกในฟอร์มได้`;
+                        break;
+                    case 3:
+                        stepSpecificPrompt = `ผู้ใช้อยู่ใน Step 3: Sweet Spot สำหรับ ${formData.productTrack} track ช่วยหาข้อความที่ balance ระหว่าง brand message กับ audience needs โดยคำนึงถึง compliance และสามารถเสนอข้อมูลให้กรอกในฟอร์มได้`;
+                        break;
+                    case 4:
+                        stepSpecificPrompt = `ผู้ใช้อยู่ใน Step 4: Funnel สำหรับ ${formData.productTrack} track ช่วยแนะนำ activities สำหรับ TOFU, MOFU, BOFU และสามารถเสนอข้อมูลให้กรอกในฟอร์มได้`;
+                        break;
+                    case 5:
+                        stepSpecificPrompt = `ผู้ใช้อยู่ใน Step 5: Review ช่วยตรวจสอบแผนและแนะนำการปรับปรุง`;
+                        break;
+                    default:
+                        stepSpecificPrompt = 'ช่วยแนะนำการใช้งาน Digital Victory Planner';
+                }
+
+                return `คุณเป็น Digital Victory Mentor ผู้เชี่ยวชาญด้านการตลาดยาและสุขภาพ ช่วยนักศึกษาเภสัชวางแผนการตลาด ${stepSpecificPrompt} 
+
+ข้อมูลปัจจุบันของผู้ใช้:
+- Team: ${formData.groupName || 'ยังไม่ระบุ'}
+- Product: ${formData.productName || 'ยังไม่ระบุ'} (${formData.productTrack || 'ยังไม่เลือก'})
+- Persona: ${formData.personaName || 'ยังไม่ระบุ'}
+- Pain Points: ${formData.personaPain || 'ยังไม่ระบุ'}
+
+**คำสั่งพิเศษ**: ถ้าต้องการแนะนำข้อมูลให้กรอกในฟอร์ม ให้ใช้รูปแบบ:
+💡 **[ชื่อฟิลด์]**: [คำแนะนำ]
+[Accept] [Reject]
+
+ตอบสั้นๆ กระชับ ใช้ภาษาที่เป็นกันเอง และให้คำแนะนำที่ใช้ได้จริง`;
+            };
+
+            const parseSuggestions = (content) => {
+                const suggestions = [];
+                const lines = content.split('\n');
+                
+                for (let i = 0; i < lines.length; i++) {
+                    const line = lines[i].trim();
+                    if (line.startsWith('💡 **') && line.includes('**:')) {
+                        const fieldName = line.match(/\*\*(.*?)\*\*/)?.[1] || '';
+                        const suggestion = line.split('**:')[1]?.trim() || '';
+                        
+                        if (fieldName && suggestion) {
+                            suggestions.push({
+                                id: Date.now() + Math.random(),
+                                fieldName: fieldName,
+                                suggestion: suggestion,
+                                accepted: false
+                            });
+                        }
+                    }
+                }
+                
+                return suggestions;
+            };
+
+            const handleSendMessage = async () => {
+                if (!inputValue.trim() || isLoading) return;
+
+                const userMessage = { role: 'user', content: inputValue };
+                setMessages(prev => [...prev, userMessage]);
+                setInputValue('');
+                setIsLoading(true);
+
+                try {
+                    const response = await fetch('/.netlify/functions/ai-chat', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            messages: [
+                                { role: 'system', content: getContextualPrompt() },
+                                ...messages.slice(-5), // Keep last 5 messages for context
+                                userMessage
+                            ]
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to get AI response');
+                    }
+
+                    const data = await response.json();
+                    const content = data.content || 'ขอโทษครับ ผมไม่สามารถตอบได้ในขณะนี้ กรุณาลองใหม่อีกครั้ง';
+                    const suggestions = parseSuggestions(content);
+                    
+                    setMessages(prev => [...prev, { 
+                        role: 'assistant', 
+                        content: content,
+                        suggestions: suggestions
+                    }]);
+                } catch (error) {
+                    console.error('AI Chat Error:', error);
+                    setMessages(prev => [...prev, { 
+                        role: 'assistant', 
+                        content: 'ขอโทษครับ เกิดข้อผิดพลาดในการเชื่อมต่อ AI กรุณาลองใหม่อีกครั้ง 🔧' 
+                    }]);
+                } finally {
+                    setIsLoading(false);
+                }
+            };
+
+            const handleKeyPress = (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                }
+            };
+
+            const handleAcceptSuggestion = (suggestion) => {
+                if (onSuggestionAccept) {
+                    onSuggestionAccept(suggestion.fieldName, suggestion.suggestion);
+                    
+                    // Update message to show accepted
+                    setMessages(prev => prev.map(msg => 
+                        msg.suggestions ? {
+                            ...msg,
+                            suggestions: msg.suggestions.map(s => 
+                                s.id === suggestion.id ? { ...s, accepted: true } : s
+                            )
+                        } : msg
+                    ));
+                }
+            };
+
+            if (!isOpen) {
+                return (
+                    <button
+                        onClick={onToggle}
+                        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 flex items-center justify-center z-50 no-print"
+                        title="AI Assistant"
+                    >
+                        <Icon name="message-circle" className="w-6 h-6" />
+                        <span className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+                    </button>
+                );
+            }
+
+            return (
+                <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-white rounded-lg shadow-2xl border border-gray-200 flex flex-col z-50 no-print">
+                    {/* Header */}
+                    <div className="bg-blue-600 text-white p-4 rounded-t-lg flex justify-between items-center">
+                        <div className="flex items-center">
+                            <Icon name="bot" className="w-5 h-5 mr-2" />
+                            <span className="font-semibold">Digital Victory Mentor</span>
+                        </div>
+                        <button
+                            onClick={onToggle}
+                            className="text-white hover:bg-blue-700 rounded p-1 transition"
+                        >
+                            <Icon name="x" className="w-4 h-4" />
+                        </button>
+                    </div>
+
+                    {/* Messages */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                        {messages.map((message, index) => (
+                            <div key={index}>
+                                <div
+                                    className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                                >
+                                    <div
+                                        className={`max-w-[80%] p-3 rounded-lg ${
+                                            message.role === 'user'
+                                                ? 'bg-blue-600 text-white'
+                                                : 'bg-gray-100 text-gray-800'
+                                        }`}
+                                    >
+                                        {message.content}
+                                    </div>
+                                </div>
+                                
+                                {/* Suggestion Cards */}
+                                {message.suggestions && message.suggestions.length > 0 && (
+                                    <div className="mt-2 space-y-2">
+                                        {message.suggestions.map((suggestion) => (
+                                            <div
+                                                key={suggestion.id}
+                                                className={`bg-blue-50 border border-blue-200 rounded-lg p-3 ml-2 ${
+                                                    suggestion.accepted ? 'opacity-50' : ''
+                                                }`}
+                                            >
+                                                <div className="flex items-start justify-between">
+                                                    <div className="flex-1">
+                                                        <div className="flex items-center mb-1">
+                                                            <Icon name="lightbulb" className="w-4 h-4 text-blue-600 mr-2" />
+                                                            <span className="font-semibold text-sm text-blue-800">
+                                                                {suggestion.fieldName}
+                                                            </span>
+                                                        </div>
+                                                        <p className="text-sm text-gray-700 ml-6">
+                                                            {suggestion.suggestion}
+                                                        </p>
+                                                    </div>
+                                                    {!suggestion.accepted && (
+                                                        <div className="flex space-x-1 ml-2">
+                                                            <button
+                                                                onClick={() => handleAcceptSuggestion(suggestion)}
+                                                                className="px-2 py-1 bg-green-600 text-white text-xs rounded hover:bg-green-700 transition"
+                                                                title="Accept suggestion"
+                                                            >
+                                                                <Icon name="check" className="w-3 h-3" />
+                                                            </button>
+                                                            <button
+                                                                className="px-2 py-1 bg-gray-400 text-white text-xs rounded hover:bg-gray-500 transition"
+                                                                title="Reject suggestion"
+                                                            >
+                                                                <Icon name="x" className="w-3 h-3" />
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                    {suggestion.accepted && (
+                                                        <div className="ml-2">
+                                                            <span className="text-xs text-green-600 font-semibold">
+                                                                ✓ Accepted
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                        {isLoading && (
+                            <div className="flex justify-start">
+                                <div className="bg-gray-100 text-gray-800 p-3 rounded-lg">
+                                    <div className="flex items-center space-x-1">
+                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}}></div>
+                                        <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}}></div>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        <div ref={messagesEndRef} />
+                    </div>
+
+                    {/* Input */}
+                    <div className="p-4 border-t border-gray-200">
+                        <div className="flex space-x-2">
+                            <input
+                                type="text"
+                                value={inputValue}
+                                onChange={(e) => setInputValue(e.target.value)}
+                                onKeyPress={handleKeyPress}
+                                placeholder="ถามผมได้เลยครับ..."
+                                className="flex-1 p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                disabled={isLoading}
+                            />
+                            <button
+                                onClick={handleSendMessage}
+                                disabled={isLoading || !inputValue.trim()}
+                                className="bg-blue-600 text-white p-2 rounded-lg hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition"
+                            >
+                                <Icon name="send" className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // --- SUB-COMPONENTS (Defined OUTSIDE App to fix focus/typing issues) ---
+
+        const Step1_Setup = ({ formData, handleChange }) => (
+            <div className="space-y-6 fade-in">
+                <div className="flex items-center text-blue-900 mb-4 border-b pb-2">
+                    <div className="bg-blue-100 p-2 rounded-lg mr-3"><Icon name="users" className="w-6 h-6" /></div>
+                    <h2 className="text-xl font-bold">Step 1: Team & Product Setup</h2>
+                </div>
+                
+                <div className="space-y-4">
+                    {/* Team Name */}
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อกลุ่ม (Team Name)</label>
+                        <input 
+                            type="text" 
+                            name="groupName"
+                            value={formData.groupName}
+                            onChange={(e) => handleChange('groupName', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition bg-white"
+                            placeholder="พิมพ์ชื่อกลุ่มของคุณ..."
+                        />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* Product Name (Free Text) */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">ชื่อสินค้า (Product Name)</label>
+                            <input 
+                                type="text"
+                                name="productName"
+                                value={formData.productName}
+                                onChange={(e) => handleChange('productName', e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white"
+                                placeholder="เช่น ยาแก้ปวด A, อาหารเสริม B..."
+                            />
+                        </div>
+
+                        {/* Product Track (User Classification) */}
+                        <div>
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">ประเภทสินค้า/กลยุทธ์ (Track Selection)</label>
+                            <select 
+                                name="productTrack"
+                                value={formData.productTrack}
+                                onChange={(e) => handleChange('productTrack', e.target.value)}
+                                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer"
+                            >
+                                <option value="">-- กรุณาเลือกประเภท (Classify Your Product) --</option>
+                                <option value="B2C">Track A: Consumer (B2C) - เน้นผู้บริโภคทั่วไป</option>
+                                <option value="B2B">Track B: Ethical/HCP (B2B) - เน้นแพทย์/เภสัชกร</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Dynamic Context Box */}
+                    {formData.productTrack && (
+                        <div className={`mt-4 p-4 rounded-lg border-l-4 ${formData.productTrack === 'B2C' ? 'bg-green-50 border-green-500 text-green-800' : 'bg-indigo-50 border-indigo-500 text-indigo-800'}`}>
+                            <div className="flex items-center font-bold mb-1">
+                                <Icon name={formData.productTrack === 'B2C' ? 'shopping-bag' : 'briefcase'} className="w-4 h-4 mr-2" />
+                                Mode: {formData.productTrack === 'B2C' ? 'Consumer Focus (Machine Gun)' : 'Healthcare Professional Focus (Sniper)'}
+                            </div>
+                            <p className="text-sm opacity-90">
+                                {formData.productTrack === 'B2C' 
+                                    ? 'ระบบจะเน้นเรื่องการสร้าง Content จำนวนมาก (Storytelling) และตรวจสอบคำต้องห้ามตามกฎ อย.'
+                                    : 'ระบบจะเน้นเรื่องข้อมูลวิชาการ (Scientific Data) และตรวจสอบจริยธรรม (MPAT Rules)'}
+                            </p>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+
+        const Step2_Persona = ({ formData, handleChange }) => (
+            <div className="space-y-6 fade-in">
+                <div className="flex items-center text-blue-900 mb-4 border-b pb-2">
+                    <div className="bg-blue-100 p-2 rounded-lg mr-3"><Icon name="target" className="w-6 h-6" /></div>
+                    <h2 className="text-xl font-bold">Step 2: Define Persona</h2>
+                </div>
+
+                <div className="bg-white p-6 rounded-lg border border-gray-200 shadow-sm">
+                    <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            {formData.productTrack === 'B2C' ? 'ลูกค้าเป้าหมายคือใคร? (Target Persona)' : 'แพทย์/เภสัชกรกลุ่มเป้าหมาย (Target HCP)'}
+                        </label>
+                        <input 
+                            type="text" 
+                            value={formData.personaName}
+                            onChange={(e) => handleChange('personaName', e.target.value)}
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder={formData.productTrack === 'B2C' ? 'เช่น น้องพลอย สาวออฟฟิศ...' : 'เช่น แพทย์ GP ใน รพ.ชุมชน...'}
+                        />
+                    </div>
+
+                    <div>
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            ปัญหาหรือความต้องการ (Pain Points / Needs)
+                        </label>
+                        <textarea 
+                            value={formData.personaPain}
+                            onChange={(e) => handleChange('personaPain', e.target.value)}
+                            rows="4"
+                            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                            placeholder="เขากำลังเจอปัญหาอะไร? หรือมองหาอะไรอยู่?"
+                        ></textarea>
+                    </div>
+                </div>
+            </div>
+        );
+
+        const Step3_SweetSpot = ({ formData, handleChange, handleArrayChange }) => (
+            <div className="space-y-6 fade-in">
+                <div className="flex items-center text-blue-900 mb-4 border-b pb-2">
+                    <div className="bg-blue-100 p-2 rounded-lg mr-3"><Icon name="message-circle" className="w-6 h-6" /></div>
+                    <h2 className="text-xl font-bold">Step 3: The Ethical Sweet Spot</h2>
+                </div>
+
+                {/* Warning Box based on User Selection */}
+                <div className="bg-orange-50 border border-orange-200 p-4 rounded-lg flex items-start mb-6">
+                    <Icon name="alert-triangle" className="w-5 h-5 text-orange-600 mr-3 mt-1 flex-shrink-0" />
+                    <div>
+                        <h4 className="font-bold text-orange-800 text-sm">Compliance Reminder ({formData.productTrack})</h4>
+                        <p className="text-xs text-orange-800 mt-1">
+                            {formData.productTrack === 'B2C' 
+                                ? 'ระวัง! ห้ามใช้คำว่า "หายขาด", "ดีที่สุด", "การันตี" (Overclaim). ให้เน้น Storytelling และผลลัพธ์ที่พิสูจน์ได้'
+                                : 'ระวัง! ห้ามกระตุ้น Demand (Induce Demand), ของขวัญห้ามเกิน 3,000 บาท, ห้ามโฆษณาต่อประชาชน'}
+                        </p>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Self Centric */}
+                    <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                        <h3 className="font-bold text-gray-700 mb-2 flex items-center">
+                            <Icon name="mic" className="w-4 h-4 mr-2"/> สิ่งที่แบรนด์อยากบอก (Self-Centric)
+                        </h3>
+                        {formData.selfCentric.map((item, idx) => (
+                            <input 
+                                key={idx}
+                                type="text"
+                                value={item}
+                                onChange={(e) => handleArrayChange('selfCentric', idx, e.target.value)}
+                                className="w-full mb-2 p-2 border rounded text-sm focus:border-blue-500 outline-none"
+                                placeholder={`จุดเด่นข้อที่ ${idx + 1}`}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Audience Pleasing */}
+                    <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                        <h3 className="font-bold text-blue-700 mb-2 flex items-center">
+                            <Icon name="heart" className="w-4 h-4 mr-2"/> สิ่งที่ลูกค้าอยากฟัง (Audience-Pleasing)
+                        </h3>
+                        {formData.audiencePleasing.map((item, idx) => (
+                            <input 
+                                key={idx}
+                                type="text"
+                                value={item}
+                                onChange={(e) => handleArrayChange('audiencePleasing', idx, e.target.value)}
+                                className="w-full mb-2 p-2 border rounded text-sm focus:border-blue-500 outline-none"
+                                placeholder={`ความสนใจข้อที่ ${idx + 1}`}
+                            />
+                        ))}
+                    </div>
+                </div>
+
+                <div className="mt-4 bg-green-50 p-6 rounded-lg border-2 border-green-200 text-center">
+                    <label className="block text-lg font-bold text-green-900 mb-2">
+                        ✨ The Sweet Spot Message (ข้อความจุดลงตัว)
+                    </label>
+                    <p className="text-xs text-green-700 mb-3">สรุปข้อความหลักที่จะใช้สื่อสาร ที่โดนใจลูกค้าและถูกต้องตามกฎ</p>
+                    <textarea 
+                        value={formData.sweetSpotMessage}
+                        onChange={(e) => handleChange('sweetSpotMessage', e.target.value)}
+                        className="w-full p-4 border border-green-300 rounded-lg focus:ring-2 focus:ring-green-500 outline-none text-center text-lg font-medium"
+                        placeholder="เขียน Key Message หลักที่นี่..."
+                        rows="2"
+                    ></textarea>
+                </div>
+            </div>
+        );
+
+        const Step4_Funnel = ({ formData, handleChange, handleArrayChange }) => {
+            const [showChannelList, setShowChannelList] = useState([false, false, false]);
+            
+            const onlineChannels = [
+                'Facebook', 'Instagram', 'TikTok', 'YouTube', 'Twitter', 'LinkedIn',
+                'Line Official', 'Website', 'Landing Page', 'Blog', 'Email Marketing',
+                'Google Ads', 'Facebook Ads', 'TikTok Ads', 'Influencer Marketing',
+                'KOL Collaboration', 'Online Seminar', 'Webinar', 'Live Streaming',
+                'Podcast', 'Online Community', 'Forum', 'Chatbot', 'Mobile App',
+                'SMS Marketing', 'Push Notification', 'Retargeting Ads'
+            ];
+            
+            const offlineChannels = [
+                'Hospital Visit', 'Clinic Visit', 'Pharmacy Visit', 'Medical Conference',
+                'Seminar', 'Workshop', 'Symposium', 'Exhibition', 'Trade Show',
+                'Print Media', 'Magazine', 'Newspaper', 'Brochure', 'Flyer',
+                'TV Commercial', 'Radio', 'Billboard', 'Transit Ads', 'Cinema Ads',
+                'Direct Mail', 'Sales Rep Visit', 'Detailing', 'Sampling',
+                'Event Sponsorship', 'Community Outreach', 'Health Camp',
+                'Doctor Meeting', 'Pharmacist Meeting', 'Focus Group'
+            ];
+
+            const toggleChannelList = (index) => {
+                const newShowList = [...showChannelList];
+                newShowList[index] = !newShowList[index];
+                setShowChannelList(newShowList);
+            };
+
+            const selectChannel = (index, channel) => {
+                const newActivities = [...formData.keyActivities];
+                newActivities[index] = channel;
+                handleArrayChange('keyActivities', index, channel);
+                setShowChannelList([false, false, false]);
+            };
+
+            const addActivityDetail = (index) => {
+                const currentActivity = formData.keyActivities[index];
+                const detail = prompt(`เพิ่มรายละเอียด activity สำหรับ "${currentActivity}":\n\nตัวอย่าง:\n- Facebook Live: สัมภาษณ์แพทย์ผู้เชี่ยวชาญ\n- TikTok: คลิปสั้นสอนเรื่องสุขภาพ\n- Hospital Visit: นำเสนอข้อมูลผลิตภัณฑ์`);
+                
+                if (detail && detail.trim()) {
+                    const newActivities = [...formData.keyActivities];
+                    newActivities[index] = `${currentActivity}: ${detail}`;
+                    handleArrayChange('keyActivities', index, newActivities[index]);
+                }
+            };
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="flex items-center text-blue-900 mb-4 border-b pb-2">
+                        <div className="bg-blue-100 p-2 rounded-lg mr-3"><Icon name="filter" className="w-6 h-6" /></div>
+                        <h2 className="text-xl font-bold">Step 4: Funnel & Activities</h2>
+                    </div>
+
+                    <div className="space-y-4">
+                        <div className="bg-white p-4 rounded border border-gray-200 shadow-sm hover:shadow-md transition">
+                            <h3 className="font-bold text-gray-600 text-sm mb-2 uppercase tracking-wide">Top of Funnel (TOFU): Awareness & Trust</h3>
+                            <input 
+                                type="text"
+                                value={formData.funnelTOFU}
+                                onChange={(e) => handleChange('funnelTOFU', e.target.value)}
+                                className="w-full p-2 border-b-2 border-gray-100 focus:border-blue-500 outline-none bg-transparent"
+                                placeholder="เช่น ทำคลิป TikTok ให้ความรู้, จัด Symposium..."
+                            />
+                        </div>
+                        <div className="bg-white p-4 rounded border border-gray-200 shadow-sm hover:shadow-md transition">
+                            <h3 className="font-bold text-gray-600 text-sm mb-2 uppercase tracking-wide">Middle of Funnel (MOFU): Consideration</h3>
+                            <input 
+                                type="text"
+                                value={formData.funnelMOFU}
+                                onChange={(e) => handleChange('funnelMOFU', e.target.value)}
+                                className="w-full p-2 border-b-2 border-gray-100 focus:border-blue-500 outline-none bg-transparent"
+                                placeholder="เช่น ให้ข้อมูลงานวิจัย, รีวิวเชิงลึก..."
+                            />
+                        </div>
+                        <div className="bg-white p-4 rounded border border-gray-200 shadow-sm hover:shadow-md transition">
+                            <h3 className="font-bold text-gray-600 text-sm mb-2 uppercase tracking-wide">Bottom of Funnel (BOFU): Conversion</h3>
+                            <input 
+                                type="text"
+                                value={formData.funnelBOFU}
+                                onChange={(e) => handleChange('funnelBOFU', e.target.value)}
+                                className="w-full p-2 border-b-2 border-gray-100 focus:border-blue-500 outline-none bg-transparent"
+                                placeholder="เช่น โปรโมชั่น, การปิดการขาย, การติดตามผล..."
+                            />
+                        </div>
+                    </div>
+
+                    <div className="mt-8 pt-4 border-t">
+                        <h3 className="font-bold text-gray-800 mb-4 flex items-center">
+                            <Icon name="check-square" className="w-5 h-5 mr-2 text-blue-600"/> 
+                            Select Top 3 Key Activities (เลือก 3 กิจกรรมหลักที่จะทำจริง)
+                        </h3>
+                        
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                            <p className="text-sm text-blue-800 mb-2">
+                                <strong>💡 เคล็ดลับ:</strong> คลิกที่ปุ่ม "เลือก Channel" เพื่อดูรายการช่องทาง Online & Offline ทั้งหมด
+                            </p>
+                        </div>
+
+                        <div className="space-y-4">
+                            {formData.keyActivities.map((activity, idx) => (
+                                <div key={idx} className="relative">
+                                    <div className="flex items-center">
+                                        <span className="w-8 h-8 rounded-full bg-blue-600 text-white font-bold text-sm flex items-center justify-center mr-3 shadow-sm">{idx + 1}</span>
+                                        <input 
+                                            type="text"
+                                            value={activity}
+                                            onChange={(e) => handleArrayChange('keyActivities', idx, e.target.value)}
+                                            className="flex-1 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                            placeholder={`กิจกรรมหลักลำดับที่ ${idx + 1} (เช่น Facebook Live สัปดาห์ละ 2 ครั้ง)`}
+                                        />
+                                        <button
+                                            onClick={() => toggleChannelList(idx)}
+                                            className="ml-3 px-4 py-3 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition flex items-center"
+                                        >
+                                            <Icon name="list" className="w-4 h-4 mr-2" />
+                                            เลือก Channel
+                                        </button>
+                                        <button
+                                            onClick={() => addActivityDetail(idx)}
+                                            className="ml-2 px-4 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 transition flex items-center"
+                                            title="เพิ่มรายละเอียด activity"
+                                        >
+                                            <Icon name="plus-circle" className="w-4 h-4 mr-2" />
+                                            เพิ่มรายละเอียด
+                                        </button>
+                                    </div>
+                                    
+                                    {/* Channel Dropdown */}
+                                    {showChannelList[idx] && (
+                                        <div className="absolute z-20 mt-2 w-full bg-white border border-gray-300 rounded-lg shadow-xl max-h-96 overflow-y-auto">
+                                            <div className="sticky top-0 bg-white border-b border-gray-200 p-3 z-10">
+                                                <h4 className="font-bold text-gray-800 mb-2">🌐 Online Channels</h4>
+                                            </div>
+                                            <div className="p-3 pb-0">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {onlineChannels.map((channel) => (
+                                                        <button
+                                                            key={channel}
+                                                            onClick={() => selectChannel(idx, channel)}
+                                                            className="text-left px-3 py-2 bg-blue-50 hover:bg-blue-100 rounded text-sm text-gray-700 hover:text-blue-800 transition"
+                                                        >
+                                                            {channel}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="sticky top-0 bg-white border-b border-gray-200 p-3 z-10 mt-4">
+                                                <h4 className="font-bold text-gray-800 mb-2">🏢 Offline Channels</h4>
+                                            </div>
+                                            <div className="p-3">
+                                                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                                                    {offlineChannels.map((channel) => (
+                                                        <button
+                                                            key={channel}
+                                                            onClick={() => selectChannel(idx, channel)}
+                                                            className="text-left px-3 py-2 bg-green-50 hover:bg-green-100 rounded text-sm text-gray-700 hover:text-green-800 transition"
+                                                        >
+                                                            {channel}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* Channel Examples */}
+                        <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <h4 className="font-bold text-gray-800 mb-3 flex items-center">
+                                    <Icon name="globe" className="w-4 h-4 mr-2 text-blue-600" />
+                                    ตัวอย่าง Online Activities
+                                </h4>
+                                <ul className="text-sm text-gray-700 space-y-1">
+                                    <li>• Facebook Live: สัมภาษณ์แพทย์ผู้เชี่ยวชาญ</li>
+                                    <li>• TikTok: คลิปสั้นสอนเรื่องสุขภาพ</li>
+                                    <li>• YouTube: รีวิวผลิตภัณฑ์โดย KOL</li>
+                                    <li>• Line Official: ส่งข่าวสารและโปรโมชั่น</li>
+                                </ul>
+                            </div>
+                            
+                            <div className="bg-gray-50 rounded-lg p-4">
+                                <h4 className="font-bold text-gray-800 mb-3 flex items-center">
+                                    <Icon name="building" className="w-4 h-4 mr-2 text-green-600" />
+                                    ตัวอย่าง Offline Activities
+                                </h4>
+                                <ul className="text-sm text-gray-700 space-y-1">
+                                    <li>• Hospital Visit: นำเสนอข้อมูลแพทย์</li>
+                                    <li>• Medical Conference: จัดบูธนิทรรศการ</li>
+                                    <li>• Workshop: อบรมพยาบาลและเภสัชกร</li>
+                                    <li>• Sampling: แจกตัวอย่างผลิตภัณฑ์</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        const Step5_Review = ({ formData }) => {
+            const handlePrint = () => window.print();
+            
+            const handleDownloadTxt = () => {
+                const content = `
+DIGITAL VICTORY PLAN 2025
+-------------------------
+Team: ${formData.groupName}
+Product: ${formData.productName} (${formData.productTrack})
+
+[1] PERSONA
+Target: ${formData.personaName}
+Pain Point: ${formData.personaPain}
+
+[2] THE SWEET SPOT MESSAGE
+Core Message: ${formData.sweetSpotMessage}
+
+[3] FUNNEL STRATEGY
+TOFU (Awareness): ${formData.funnelTOFU}
+MOFU (Consideration): ${formData.funnelMOFU}
+BOFU (Conversion): ${formData.funnelBOFU}
+
+[4] KEY ACTIVITIES
+1. ${formData.keyActivities[0]}
+2. ${formData.keyActivities[1]}
+3. ${formData.keyActivities[2]}
+                `;
+                
+                const element = document.createElement("a");
+                const file = new Blob([content], {type: 'text/plain'});
+                element.href = URL.createObjectURL(file);
+                element.download = `Plan_${formData.groupName || 'Draft'}.txt`;
+                document.body.appendChild(element);
+                element.click();
+            };
+
+            return (
+                <div className="space-y-6 fade-in">
+                    <div className="flex items-center justify-between text-blue-900 mb-4 border-b pb-2 no-print">
+                        <div className="flex items-center">
+                            <div className="bg-blue-100 p-2 rounded-lg mr-3"><Icon name="file-check" className="w-6 h-6" /></div>
+                            <h2 className="text-xl font-bold">Step 5: Final Review</h2>
+                        </div>
+                    </div>
+
+                    {/* A4 Preview Container */}
+                    <div className="bg-white p-8 shadow-xl border border-gray-200 rounded-none w-full max-w-4xl mx-auto print-container text-black">
+                        
+                        {/* Header Report */}
+                        <div className="flex justify-between items-end border-b-2 border-black pb-4 mb-6">
+                            <div>
+                                <h1 className="text-3xl font-extrabold tracking-tight uppercase">Digital Victory Plan</h1>
+                                <p className="text-sm text-gray-500 mt-1">Pharm Connection Workshop 2025</p>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-xl font-bold">{formData.groupName || 'Untitled Team'}</div>
+                                <div className="text-sm bg-black text-white px-3 py-1 inline-block mt-1 font-bold">
+                                    {formData.productName || 'No Product Name'}
+                                </div>
+                                <div className="text-xs text-gray-500 mt-1 uppercase tracking-wider">{formData.productTrack} Track</div>
+                            </div>
+                        </div>
+
+                        {/* Content Grid */}
+                        <div className="grid grid-cols-12 gap-6">
+                            
+                            {/* Left Column */}
+                            <div className="col-span-12 md:col-span-4 space-y-6">
+                                <div className="bg-gray-100 p-4 rounded">
+                                    <h3 className="font-bold text-sm uppercase text-gray-600 mb-2 border-b border-gray-300 pb-1">Target Persona</h3>
+                                    <p className="font-bold text-lg">{formData.personaName || '-'}</p>
+                                    <p className="text-sm mt-2 italic text-gray-600">"{formData.personaPain || '-'}"</p>
+                                </div>
+
+                                <div className="bg-blue-50 p-4 rounded">
+                                    <h3 className="font-bold text-sm uppercase text-blue-800 mb-2 border-b border-blue-200 pb-1">Strategy Hook</h3>
+                                    <div className="text-xs text-gray-500 mb-1 font-semibold">Brand Says:</div>
+                                    <ul className="list-disc ml-4 text-sm mb-3">
+                                        {formData.selfCentric.filter(x => x).map((x, i) => <li key={i}>{x}</li>)}
+                                        {formData.selfCentric.every(x => !x) && <li className="text-gray-400">-</li>}
+                                    </ul>
+                                    <div className="text-xs text-gray-500 mb-1 font-semibold">Audience Wants:</div>
+                                    <ul className="list-disc ml-4 text-sm">
+                                        {formData.audiencePleasing.filter(x => x).map((x, i) => <li key={i}>{x}</li>)}
+                                        {formData.audiencePleasing.every(x => !x) && <li className="text-gray-400">-</li>}
+                                    </ul>
+                                </div>
+                            </div>
+
+                            {/* Right Column */}
+                            <div className="col-span-12 md:col-span-8 space-y-6">
+                                
+                                {/* Sweet Spot */}
+                                <div className="border-2 border-dashed border-green-400 p-5 rounded-lg bg-green-50 text-center relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 bg-green-200 text-green-800 text-xs px-2 py-1 rounded-bl">Key Message</div>
+                                    <h3 className="font-bold text-green-800 text-sm uppercase mb-3">The Sweet Spot</h3>
+                                    <p className="text-xl font-bold text-green-900 leading-relaxed">
+                                        "{formData.sweetSpotMessage || 'ยังไม่ได้ระบุ Key Message'}"
+                                    </p>
+                                </div>
+
+                                {/* Funnel Table */}
+                                <div>
+                                    <h3 className="font-bold text-sm uppercase text-gray-600 mb-2 border-b border-gray-300 pb-1">Funnel Strategy</h3>
+                                    <table className="w-full text-sm border-collapse">
+                                        <tbody>
+                                            <tr className="border-b">
+                                                <td className="py-3 pr-4 font-bold w-1/4 text-gray-500 align-top">AWARENESS</td>
+                                                <td className="py-3 text-gray-800">{formData.funnelTOFU || '-'}</td>
+                                            </tr>
+                                            <tr className="border-b">
+                                                <td className="py-3 pr-4 font-bold text-gray-500 align-top">CONSIDERATION</td>
+                                                <td className="py-3 text-gray-800">{formData.funnelMOFU || '-'}</td>
+                                            </tr>
+                                            <tr>
+                                                <td className="py-3 pr-4 font-bold text-gray-500 align-top">CONVERSION</td>
+                                                <td className="py-3 text-gray-800">{formData.funnelBOFU || '-'}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Key Activities */}
+                                <div>
+                                    <h3 className="font-bold text-sm uppercase text-gray-600 mb-3 border-b border-gray-300 pb-1">Top 3 Key Activities</h3>
+                                    <div className="grid grid-cols-3 gap-4">
+                                        {formData.keyActivities.map((act, idx) => (
+                                            <div key={idx} className="bg-gray-800 text-white p-3 rounded text-center shadow-sm">
+                                                <div className="text-[10px] text-gray-400 mb-1 uppercase tracking-widest">Activity {idx+1}</div>
+                                                <div className="font-bold text-sm leading-tight">{act || '-'}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Footer Report */}
+                        <div className="mt-12 pt-4 border-t border-gray-300 flex justify-between items-center text-xs text-gray-500">
+                            <div>Generated with Digital Victory Planner</div>
+                            <div className="flex items-center">
+                                Developed by Wirun Wetsiri <img src="https://i.postimg.cc/yY1rPJ07/wirun-facbook.png" className="h-5 w-5 ml-2 rounded-full border border-gray-300"/>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {/* Action Buttons */}
+                    <div className="flex justify-center space-x-4 no-print py-4">
+                        <button onClick={handlePrint} className="flex items-center px-6 py-3 bg-red-600 text-white font-bold rounded-lg shadow hover:bg-red-700 transition transform hover:scale-105">
+                            <Icon name="file-text" className="mr-2"/> Save as PDF
+                        </button>
+                        <button onClick={handleDownloadTxt} className="flex items-center px-6 py-3 bg-gray-600 text-white font-bold rounded-lg shadow hover:bg-gray-700 transition transform hover:scale-105">
+                            <Icon name="download" className="mr-2"/> Download .TXT
+                        </button>
+                    </div>
+                </div>
+            );
+        };
+
+        const WorkflowDiagram = ({ onStart }) => (
+            <div className="max-w-5xl mx-auto p-6 fade-in">
+                <div className="bg-white p-8 rounded-xl shadow-lg border border-gray-200 text-center">
+                    <h2 className="text-2xl font-bold text-gray-800 mb-2">The Digital Victory Blueprint Workflow</h2>
+                    <p className="text-gray-500 mb-4">แผนภาพกระบวนการคิด 5 ขั้นตอนสู่แผนการตลาดหน้าเดียว</p>
+                    
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                        <p className="text-blue-800 text-sm">
+                            <strong>🎯 อยากดูรายละเอียดเพิ่มเติม?</strong> 
+                            <a 
+                                href="blueprint.html" 
+                                target="_blank" 
+                                className="text-blue-600 underline hover:text-blue-800 ml-2"
+                            >
+                                ดู Blueprint แบบเต็ม (Infographic + Hero Section)
+                            </a>
+                        </p>
+                    </div>
+                    
+                    <div className="relative">
+                        <div className="hidden md:block absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 transform -translate-y-1/2"></div>
+                        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                            {[
+                                { icon: 'users', title: '1. Setup', desc: 'ตั้งทีม & เลือกสินค้า' },
+                                { icon: 'target', title: '2. Persona', desc: 'เข้าใจลูกค้า' },
+                                { icon: 'shield-check', title: '3. Compliance', desc: 'หา Sweet Spot' },
+                                { icon: 'filter', title: '4. Funnel', desc: 'วางกลยุทธ์' },
+                                { icon: 'file-text', title: '5. Victory Plan', desc: 'สรุปแผน 1 หน้า' }
+                            ].map((item, idx) => (
+                                <div key={idx} className="flex flex-col items-center bg-white p-4">
+                                    <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 mb-3 border-4 border-white shadow-sm z-10">
+                                        <Icon name={item.icon} className="w-8 h-8" />
+                                    </div>
+                                    <h3 className="font-bold text-gray-800">{item.title}</h3>
+                                    <p className="text-xs text-gray-500 mt-1">{item.desc}</p>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
+                        <button onClick={onStart} className="px-8 py-3 bg-blue-600 text-white font-bold rounded-full shadow-lg hover:bg-blue-700 transition transform hover:scale-105 flex items-center">
+                            <Icon name="rocket" className="mr-2 w-5 h-5" />
+                            เริ่ม Workshop ตอนนี้
+                        </button>
+                        <a 
+                            href="blueprint.html" 
+                            target="_blank"
+                            className="px-8 py-3 bg-purple-600 text-white font-bold rounded-full shadow-lg hover:bg-purple-700 transition transform hover:scale-105 flex items-center justify-center"
+                        >
+                            <Icon name="compass" className="mr-2 w-5 h-5" />
+                            ดู Blueprint เต็ม
+                        </a>
+                    </div>
+                </div>
+            </div>
+        );
+
+        // --- MAIN APP COMPONENT ---
+        function App() {
+            const [activeTab, setActiveTab] = useState('workflow'); 
+            const [step, setStep] = useState(1);
+            const [isAIChatOpen, setIsAIChatOpen] = useState(false);
+            
+            // Initial State
+            const [formData, setFormData] = useState(() => {
+                const saved = localStorage.getItem('pharmPlanData_v2');
+                return saved ? JSON.parse(saved) : {
+                    groupName: '',
+                    productName: '',
+                    productTrack: '', // B2C or B2B
+                    personaName: '',
+                    personaPain: '',
+                    selfCentric: ['', ''],
+                    audiencePleasing: ['', ''],
+                    sweetSpotMessage: '',
+                    funnelTOFU: '',
+                    funnelMOFU: '',
+                    funnelBOFU: '',
+                    keyActivities: ['', '', '']
+                };
+            });
+
+            useEffect(() => {
+                localStorage.setItem('pharmPlanData_v2', JSON.stringify(formData));
+            }, [formData]);
+
+            const handleChange = (field, value) => {
+                setFormData(prev => ({ ...prev, [field]: value }));
+            };
+
+            const handleArrayChange = (field, index, value) => {
+                const newArray = [...formData[field]];
+                newArray[index] = value;
+                setFormData(prev => ({ ...prev, [field]: newArray }));
+            };
+
+            const handleSuggestionAccept = (fieldName, suggestion) => {
+                // Map field names to form data keys
+                const fieldMapping = {
+                    'ชื่อกลุ่ม': 'groupName',
+                    'ชื่อสินค้า': 'productName',
+                    'ประเภทสินค้า': 'productTrack',
+                    'Persona': 'personaName',
+                    'Pain Points': 'personaPain',
+                    'Sweet Spot Message': 'sweetSpotMessage',
+                    'TOFU': 'funnelTOFU',
+                    'MOFU': 'funnelMOFU',
+                    'BOFU': 'funnelBOFU',
+                    'Key Activity 1': () => {
+                        const newActivities = [...formData.keyActivities];
+                        newActivities[0] = suggestion;
+                        setFormData(prev => ({ ...prev, keyActivities: newActivities }));
+                    },
+                    'Key Activity 2': () => {
+                        const newActivities = [...formData.keyActivities];
+                        newActivities[1] = suggestion;
+                        setFormData(prev => ({ ...prev, keyActivities: newActivities }));
+                    },
+                    'Key Activity 3': () => {
+                        const newActivities = [...formData.keyActivities];
+                        newActivities[2] = suggestion;
+                        setFormData(prev => ({ ...prev, keyActivities: newActivities }));
+                    }
+                };
+
+                const fieldKey = fieldMapping[fieldName];
+                if (typeof fieldKey === 'function') {
+                    fieldKey(); // Handle array fields
+                } else if (fieldKey) {
+                    setFormData(prev => ({ ...prev, [fieldKey]: suggestion }));
+                }
+            };
+
+            return (
+                <div className="min-h-screen flex flex-col font-sans text-gray-900">
+                    {/* Header */}
+                    <header className="bg-white shadow-sm border-b border-blue-100 no-print sticky top-0 z-50">
+                        <div className="max-w-6xl mx-auto px-4 py-3 flex justify-between items-center">
+                            <div className="flex items-center space-x-3">
+                                <div className="h-10 w-10 rounded-full overflow-hidden border border-blue-200 shadow-sm">
+                                    <img src="https://i.postimg.cc/yY1rPJ07/wirun-facbook.png" alt="Wirun Logo" className="h-full w-full object-cover" />
+                                </div>
+                                <div>
+                                    <h1 className="text-lg font-bold text-gray-800 leading-tight">Digital Victory Planner</h1>
+                                    <p className="text-[10px] text-blue-600 font-semibold tracking-wide">PHARM CONNECTION WORKSHOP</p>
+                                </div>
+                            </div>
+                            <div className="flex bg-gray-100 rounded-lg p-1">
+                                <button 
+                                    onClick={() => setActiveTab('workflow')}
+                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${activeTab === 'workflow' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Blueprint
+                                </button>
+                                <button 
+                                    onClick={() => setActiveTab('app')}
+                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition ${activeTab === 'app' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                                >
+                                    Workshop App
+                                </button>
+                            </div>
+                        </div>
+                    </header>
+
+                    {/* Main Content */}
+                    <main className="flex-grow py-8 px-4 no-print bg-gray-50">
+                        {activeTab === 'workflow' ? (
+                            <WorkflowDiagram onStart={() => setActiveTab('app')} />
+                        ) : (
+                            <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-xl overflow-hidden min-h-[500px] flex flex-col border border-gray-100">
+                                {/* Progress Bar */}
+                                <div className="bg-gray-100 h-1.5 w-full">
+                                    <div className="bg-blue-600 h-full transition-all duration-500 ease-in-out" style={{width: `${step * 20}%`}}></div>
+                                </div>
+
+                                <div className="p-6 md:p-8 flex-grow">
+                                    {step === 1 && <Step1_Setup formData={formData} handleChange={handleChange} />}
+                                    {step === 2 && <Step2_Persona formData={formData} handleChange={handleChange} />}
+                                    {step === 3 && <Step3_SweetSpot formData={formData} handleChange={handleChange} handleArrayChange={handleArrayChange} />}
+                                    {step === 4 && <Step4_Funnel formData={formData} handleChange={handleChange} handleArrayChange={handleArrayChange} />}
+                                    {step === 5 && <Step5_Review formData={formData} />}
+                                </div>
+
+                                {/* Footer Nav */}
+                                <div className="bg-gray-50 px-8 py-4 flex justify-between border-t border-gray-200">
+                                    <button 
+                                        onClick={() => setStep(s => Math.max(1, s - 1))}
+                                        disabled={step === 1}
+                                        className={`px-5 py-2 rounded-lg font-medium transition ${step === 1 ? 'text-gray-300 cursor-not-allowed' : 'text-gray-600 hover:bg-white hover:shadow-sm'}`}
+                                    >
+                                        ย้อนกลับ
+                                    </button>
+                                    
+                                    {step < 5 && (
+                                        <button 
+                                            onClick={() => setStep(s => Math.min(5, s + 1))}
+                                            disabled={!formData.groupName || !formData.productTrack}
+                                            className={`px-6 py-2 rounded-lg font-bold shadow transition flex items-center ${
+                                                (!formData.groupName || !formData.productTrack) 
+                                                ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+                                                : 'bg-blue-600 text-white hover:bg-blue-700'
+                                            }`}
+                                        >
+                                            ถัดไป <Icon name="chevron-right" className="ml-1 w-4 h-4" />
+                                        </button>
+                                    )}
+                                </div>
+                            </div>
+                        )}
+                    </main>
+
+                    {/* Hidden Print View */}
+                    {activeTab === 'app' && step === 5 && (
+                        <div className="print-only">
+                            <Step5_Review formData={formData} />
+                        </div>
+                    )}
+
+                    <footer className="bg-white border-t py-6 text-center text-sm text-gray-400 no-print">
+                        <p>© 2025 Pharm Connection. All Rights Reserved.</p>
+                        <p className="mt-1 text-xs">Developed by <strong>Wirun Wetsiri</strong></p>
+                    </footer>
+
+                    {/* AI Chat Widget */}
+                    <AIChatWidget 
+                        formData={formData} 
+                        step={step} 
+                        isOpen={isAIChatOpen} 
+                        onToggle={() => setIsAIChatOpen(!isAIChatOpen)} 
+                        onSuggestionAccept={handleSuggestionAccept}
+                    />
+                </div>
+            );
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+</html>

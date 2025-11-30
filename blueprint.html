@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Victory Blueprint - Pharm Connection Workshop</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Noto Sans Thai', sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #3b82f6 0%, #1e40af 50%, #1e3a8a 100%);
+        }
+        .step-card {
+            transition: all 0.3s ease;
+            transform: translateY(0);
+        }
+        .step-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        .flow-line {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6, #ec4899);
+            height: 3px;
+            position: relative;
+        }
+        .flow-line::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: -4px;
+            width: 0;
+            height: 0;
+            border-left: 10px solid #ec4899;
+            border-top: 5px solid transparent;
+            border-bottom: 5px solid transparent;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .float-animation {
+            animation: float 3s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .pulse-animation {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Hero Section -->
+    <section class="hero-gradient text-white py-20 px-4 relative overflow-hidden">
+        <div class="absolute inset-0 opacity-10">
+            <div class="absolute top-10 left-10 w-32 h-32 bg-white rounded-full float-animation"></div>
+            <div class="absolute top-40 right-20 w-24 h-24 bg-white rounded-full float-animation" style="animation-delay: 1s;"></div>
+            <div class="absolute bottom-20 left-1/4 w-16 h-16 bg-white rounded-full float-animation" style="animation-delay: 2s;"></div>
+        </div>
+        
+        <div class="max-w-6xl mx-auto text-center relative z-10">
+            <div class="mb-6">
+                <div class="inline-flex items-center bg-white/20 backdrop-blur-sm rounded-full px-6 py-2 mb-6">
+                    <i data-lucide="sparkles" class="w-5 h-5 mr-2"></i>
+                    <span class="text-sm font-semibold">Pharm Connection Workshop 2025</span>
+                </div>
+            </div>
+            
+            <h1 class="text-5xl md:text-6xl font-black mb-6 leading-tight">
+                Digital Victory<br/>
+                <span class="text-yellow-300">Blueprint</span>
+            </h1>
+            
+            <p class="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto leading-relaxed">
+                แผนงานการตลาดดิจิทัลสำหรับนักศึกษาเภสัชศาสตร์<br/>
+                พร้อม AI Assistant ที่จะช่วยคุณสร้างแผนการตลาดที่ประสบความสำเร็จ
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <button onclick="startWorkshop()" class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-300 transition transform hover:scale-105 shadow-xl flex items-center justify-center">
+                    <i data-lucide="rocket" class="w-6 h-6 mr-2"></i>
+                    เริ่ม Workshop ตอนนี้
+                </button>
+                <button onclick="scrollToWorkflow()" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/30 transition transform hover:scale-105 border-2 border-white/50 flex items-center justify-center">
+                    <i data-lucide="compass" class="w-6 h-6 mr-2"></i>
+                    ดู Workflow
+                </button>
+            </div>
+            
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2">5</div>
+                    <div class="text-sm text-blue-100">ขั้นตอน</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2">2</div>
+                    <div class="text-sm text-blue-100">Tracks</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2">AI</div>
+                    <div class="text-sm text-blue-100">Assistant</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2">1</div>
+                    <div class="text-sm text-blue-100">หน้าสรุป</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workshop Overview -->
+    <section class="py-16 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Digital Victory Blueprint คืออะไร?</h2>
+                <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                    กระบวนการคิดแบบมีโครงสร้าง 5 ขั้นตอน ที่จะพาคุณจากศูนย์ถึงการสร้างแผนการตลาดดิจิทัลที่สมบูรณ์แบบ
+                    พร้อมการตรวจสอบความถูกต้องตามกฎระเบียบอุตสาหกรรมยา
+                </p>
+            </div>
+
+            <!-- Key Features -->
+            <div class="grid md:grid-cols-3 gap-8 mb-16">
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center step-card">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="brain" class="w-8 h-8 text-blue-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">AI-Powered</h3>
+                    <p class="text-gray-600">Digital Victory Mentor ช่วยแนะนำและตรวจสอบแผนการตลาดของคุณตลอดเวลา</p>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center step-card">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="shield-check" class="w-8 h-8 text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Compliance Ready</h3>
+                    <p class="text-gray-600">ตรวจสอบความถูกต้องตามกฎ อย. และจริยธรรมการตลาดยาอัตโนมัติ</p>
+                </div>
+                
+                <div class="bg-white rounded-xl shadow-lg p-8 text-center step-card">
+                    <div class="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i data-lucide="zap" class="w-8 h-8 text-purple-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 mb-3">Fast & Effective</h3>
+                    <p class="text-gray-600">สร้างแผนการตลาดสำเร็จรูปในเวลาเพียง 30 นาที</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Workflow Section -->
+    <section id="workflow" class="py-16 px-4 bg-gray-100">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">5 ขั้นตอนสู่ชัยชนะดิจิทัล</h2>
+                <p class="text-xl text-gray-600">กระบวนการคิดที่ออกแบบมาเพื่อนักศึกษาเภสัชศาสตร์โดยเฉพาะ</p>
+            </div>
+
+            <!-- Flow Chart -->
+            <div class="relative mb-16">
+                <div class="hidden lg:block absolute top-1/2 left-0 right-0 flow-line transform -translate-y-1/2"></div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                    <!-- Step 1 -->
+                    <div class="relative">
+                        <div class="bg-white rounded-xl shadow-lg p-6 step-card border-2 border-blue-200">
+                            <div class="absolute -top-3 -right-3 w-12 h-12 bg-blue-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                1
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="users" class="w-6 h-6 text-blue-600"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">Setup</h3>
+                            <p class="text-sm text-gray-600 mb-4">จัดทีมและเลือกทางเดิน</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    ตั้งชื่อทีม
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    เลือก Product Track
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    ตั้งชื่อสินค้า
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                                <div class="text-xs font-semibold text-blue-800 mb-1">🎯 เป้าหมาย:</div>
+                                <div class="text-xs text-blue-700">วางรากฐานที่ถูกต้องสำหรับแผนการตลาด</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 2 -->
+                    <div class="relative">
+                        <div class="bg-white rounded-xl shadow-lg p-6 step-card border-2 border-green-200">
+                            <div class="absolute -top-3 -right-3 w-12 h-12 bg-green-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                2
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="target" class="w-6 h-6 text-green-600"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">Persona</h3>
+                            <p class="text-sm text-gray-600 mb-4">เข้าใจลูกค้าเป้าหมาย</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    กำหนด Persona
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    ระบุ Pain Points
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    วิเคราะห์ความต้องการ
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-green-50 rounded-lg">
+                                <div class="text-xs font-semibold text-green-800 mb-1">🎯 เป้าหมาย:</div>
+                                <div class="text-xs text-green-700">สร้างความเข้าใจลึกถึงกลุ่มเป้าหมาย</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 3 -->
+                    <div class="relative">
+                        <div class="bg-white rounded-xl shadow-lg p-6 step-card border-2 border-purple-200">
+                            <div class="absolute -top-3 -right-3 w-12 h-12 bg-purple-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                3
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="shield-check" class="w-6 h-6 text-purple-600"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">Sweet Spot</h3>
+                            <p class="text-sm text-gray-600 mb-4">หาจุด Balance ที่สมบูรณ์</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    Brand Message
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    Audience Needs
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    Compliance Check
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-purple-50 rounded-lg">
+                                <div class="text-xs font-semibold text-purple-800 mb-1">🎯 เป้าหมาย:</div>
+                                <div class="text-xs text-purple-700">สร้างข้อความที่โดนใจและถูกกฎ</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 4 -->
+                    <div class="relative">
+                        <div class="bg-white rounded-xl shadow-lg p-6 step-card border-2 border-orange-200">
+                            <div class="absolute -top-3 -right-3 w-12 h-12 bg-orange-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                4
+                            </div>
+                            <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="filter" class="w-6 h-6 text-orange-600"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">Funnel</h3>
+                            <p class="text-sm text-gray-600 mb-4">วางแผนกลยุทธ์การตลาด</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    TOFU Activities
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    MOFU Activities
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    BOFU Activities
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-orange-50 rounded-lg">
+                                <div class="text-xs font-semibold text-orange-800 mb-1">🎯 เป้าหมาย:</div>
+                                <div class="text-xs text-orange-700">วางแผนกิจกรรมตามลูกค้า</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5 -->
+                    <div class="relative">
+                        <div class="bg-white rounded-xl shadow-lg p-6 step-card border-2 border-red-200">
+                            <div class="absolute -top-3 -right-3 w-12 h-12 bg-red-600 text-white rounded-full flex items-center justify-center font-bold text-lg shadow-lg">
+                                5
+                            </div>
+                            <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                                <i data-lucide="file-check" class="w-6 h-6 text-red-600"></i>
+                            </div>
+                            <h3 class="font-bold text-lg text-gray-800 mb-2">Victory Plan</h3>
+                            <p class="text-sm text-gray-600 mb-4">สรุปแผนสำเร็จรูป</p>
+                            
+                            <div class="space-y-2 text-xs">
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    ตรวจสอบข้อมูล
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    สรุป 1 หน้า
+                                </div>
+                                <div class="flex items-center text-gray-700">
+                                    <i data-lucide="check-circle" class="w-3 h-3 mr-2 text-green-500"></i>
+                                    Export PDF/TXT
+                                </div>
+                            </div>
+                            
+                            <div class="mt-4 p-3 bg-red-50 rounded-lg">
+                                <div class="text-xs font-semibold text-red-800 mb-1">🎯 เป้าหมาย:</div>
+                                <div class="text-xs text-red-700">นำเสนอแผนการตลาดสำเร็จรูป</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Track Comparison -->
+    <section class="py-16 px-4">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">เลือกทางเดินของคุณ</h2>
+                <p class="text-xl text-gray-600">2 Tracks สำหรับกลยุทธ์การตลาดที่แตกต่างกัน</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8">
+                <!-- B2C Track -->
+                <div class="bg-gradient-to-br from-green-50 to-emerald-100 rounded-xl shadow-lg p-8 border-2 border-green-200">
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mr-4">
+                            <i data-lucide="shopping-bag" class="w-8 h-8 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800">Track A: B2C</h3>
+                            <p class="text-green-700 font-semibold">Consumer Focus</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="bg-green-600 text-white px-4 py-2 rounded-full inline-block text-sm font-bold mb-3">
+                            🎯 Machine Gun Strategy
+                        </div>
+                        <p class="text-gray-700">เน้นการสร้าง Content จำนวนมากเพื่อไปถึงผู้บริโภคทั่วไป</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4">
+                            <h4 class="font-bold text-green-800 mb-2">✨ จุดเด่น:</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Storytelling & Emotional Connection</li>
+                                <li>• High Volume Content Creation</li>
+                                <li>• Social Media Focus</li>
+                                <li>• Mass Market Approach</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4">
+                            <h4 class="font-bold text-orange-800 mb-2">⚠️ ข้อควรระวัง:</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• ห้ามใช้คำว่า "หายขาด", "ดีที่สุด"</li>
+                                <li>• ต้องมีข้อมูลสนับสนุนที่พิสูจน์ได้</li>
+                                <li>• ตรวจสอบคำต้องห้ามตาม อย.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- B2B Track -->
+                <div class="bg-gradient-to-br from-indigo-50 to-blue-100 rounded-xl shadow-lg p-8 border-2 border-indigo-200">
+                    <div class="flex items-center mb-6">
+                        <div class="w-16 h-16 bg-indigo-600 rounded-full flex items-center justify-center mr-4">
+                            <i data-lucide="briefcase" class="w-8 h-8 text-white"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-2xl font-bold text-gray-800">Track B: B2B</h3>
+                            <p class="text-indigo-700 font-semibold">Healthcare Professional</p>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <div class="bg-indigo-600 text-white px-4 py-2 rounded-full inline-block text-sm font-bold mb-3">
+                            🎯 Sniper Strategy
+                        </div>
+                        <p class="text-gray-700">เน้นการสื่อสารกับแพทย์และเภสัชกรโดยเฉพาะ</p>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="bg-white rounded-lg p-4">
+                            <h4 class="font-bold text-indigo-800 mb-2">✨ จุดเด่น:</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• Scientific Data & Evidence</li>
+                                <li>• Professional Communication</li>
+                                <li>• KOL & Medical Community</li>
+                                <li>• Precision Targeting</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg p-4">
+                            <h4 class="font-bold text-orange-800 mb-2">⚠️ ข้อควรระวัง:</h4>
+                            <ul class="text-sm text-gray-700 space-y-1">
+                                <li>• ห้ามกระตุ้น Demand (Induce Demand)</li>
+                                <li>• ของขวัญห้ามเกิน 3,000 บาท</li>
+                                <li>• ห้ามโฆษณาต่อประชาชน</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Assistant Section -->
+    <section class="py-16 px-4 bg-gradient-to-br from-blue-50 to-purple-50">
+        <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-800 mb-4">Digital Victory Mentor</h2>
+                <p class="text-xl text-gray-600">AI Assistant ที่จะอยู่เคียงข้างคุณตลอดการทำงาน</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-xl p-8">
+                <div class="grid md:grid-cols-2 gap-8 items-center">
+                    <div>
+                        <div class="w-20 h-20 bg-blue-600 rounded-full flex items-center justify-center mb-6 pulse-animation">
+                            <i data-lucide="bot" class="w-10 h-10 text-white"></i>
+                        </div>
+                        
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">AI-Powered Guidance</h3>
+                        <p class="text-gray-600 mb-6">
+                            Digital Victory Mentor คือ AI Assistant ที่ถูกพัฒนามาเพื่อช่วยนักศึกษาเภสัชศาสตร์ในการวางแผนการตลาดดิจิทัล
+                            ด้วยความรู้เฉพาะทางด้านอุตสาหกรรมยาและกฎระเบียบที่เกี่ยวข้อง
+                        </p>
+
+                        <div class="space-y-3">
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3">
+                                    <i data-lucide="brain" class="w-4 h-4 text-green-600"></i>
+                                </div>
+                                <span class="text-gray-700">Context-Aware Suggestions</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
+                                    <i data-lucide="shield-check" class="w-4 h-4 text-blue-600"></i>
+                                </div>
+                                <span class="text-gray-700">Compliance Checking</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3">
+                                    <i data-lucide="zap" class="w-4 h-4 text-purple-600"></i>
+                                </div>
+                                <span class="text-gray-700">Real-time Assistance</span>
+                            </div>
+                            <div class="flex items-center">
+                                <div class="w-8 h-8 bg-orange-100 rounded-full flex items-center justify-center mr-3">
+                                    <i data-lucide="edit-3" class="w-4 h-4 text-orange-600"></i>
+                                </div>
+                                <span class="text-gray-700">Form Auto-fill</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-gray-50 rounded-lg p-6">
+                        <h4 class="font-bold text-gray-800 mb-4">ตัวอย่างการทำงานของ AI:</h4>
+                        <div class="space-y-3">
+                            <div class="bg-blue-50 border-l-4 border-blue-500 p-3 rounded">
+                                <div class="text-sm font-semibold text-blue-800">Step 1: Setup</div>
+                                <div class="text-xs text-blue-700">"แนะนำชื่อสินค้าที่เหมาะกับ B2C track"</div>
+                            </div>
+                            <div class="bg-green-50 border-l-4 border-green-500 p-3 rounded">
+                                <div class="text-sm font-semibold text-green-800">Step 2: Persona</div>
+                                <div class="text-xs text-green-700">"เสนอ Pain Points สำหรับแม่บ้านยุคใหม่"</div>
+                            </div>
+                            <div class="bg-purple-50 border-l-4 border-purple-500 p-3 rounded">
+                                <div class="text-sm font-semibold text-purple-800">Step 3: Sweet Spot</div>
+                                <div class="text-xs text-purple-700">"ช่วยหาข้อความที่ Balance และถูกกฎ"</div>
+                            </div>
+                            <div class="bg-orange-50 border-l-4 border-orange-500 p-3 rounded">
+                                <div class="text-sm font-semibold text-orange-800">Step 4: Funnel</div>
+                                <div class="text-xs text-orange-700">"แนะนำ Activities สำหรับ TOFU/MOFU/BOFU"</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-16 px-4 bg-gray-900 text-white">
+        <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-bold mb-6">พร้อมสร้าง Digital Victory ของคุณหรือยัง?</h2>
+            <p class="text-xl mb-8 text-gray-300">
+                เริ่มต้นวางแผนการตลาดดิจิทัลที่ประสบความสำเร็จด้วย AI Assistant ที่เข้าใจอุตสาหกรรมยา
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <button onclick="startWorkshop()" class="bg-yellow-400 text-gray-900 px-8 py-4 rounded-full font-bold text-lg hover:bg-yellow-300 transition transform hover:scale-105 shadow-xl flex items-center justify-center">
+                    <i data-lucide="rocket" class="w-6 h-6 mr-2"></i>
+                    เริ่ม Workshop ตอนนี้
+                </button>
+                <button onclick="window.open('index.html', '_blank')" class="bg-white/20 backdrop-blur-sm text-white px-8 py-4 rounded-full font-bold text-lg hover:bg-white/30 transition transform hover:scale-105 border-2 border-white/50 flex items-center justify-center">
+                    <i data-lucide="eye" class="w-6 h-6 mr-2"></i>
+                    ดูตัวอย่างแอป
+                </button>
+            </div>
+            
+            <div class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-6">
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2 text-yellow-400">30+</div>
+                    <div class="text-sm text-gray-400">นาทีทำงาน</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2 text-green-400">100%</div>
+                    <div class="text-sm text-gray-400">Compliance</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2 text-blue-400">AI</div>
+                    <div class="text-sm text-gray-400">Powered</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-3xl font-black mb-2 text-purple-400">Free</div>
+                    <div class="text-sm text-gray-400">ใช้งาน</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-white py-8 px-4">
+        <div class="max-w-6xl mx-auto text-center">
+            <div class="mb-4">
+                <div class="inline-flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-full overflow-hidden">
+                        <img src="https://i.postimg.cc/yY1rPJ07/wirun-facbook.png" alt="Wirun Logo" class="w-full h-full object-cover" />
+                    </div>
+                    <span class="font-bold">Digital Victory Planner</span>
+                </div>
+            </div>
+            <p class="text-gray-400 text-sm mb-2">© 2025 Pharm Connection Workshop. All Rights Reserved.</p>
+            <p class="text-gray-400 text-xs">Developed by <strong>Wirun Wetsiri</strong></p>
+        </div>
+    </footer>
+
+    <script>
+        // Initialize Lucide icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+
+        function startWorkshop() {
+            window.location.href = 'index.html';
+        }
+
+        function scrollToWorkflow() {
+            document.getElementById('workflow').scrollIntoView({ 
+                behavior: 'smooth' 
+            });
+        }
+
+        // Add smooth scroll behavior
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                document.querySelector(this.getAttribute('href')).scrollIntoView({
+                    behavior: 'smooth'
+                });
+            });
+        });
+    </script>
+</body>
+</html>

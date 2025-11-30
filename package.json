@@ -1,0 +1,26 @@
+{
+  "name": "digital-victory-planner",
+  "version": "1.0.0",
+  "description": "Digital Victory Planner for Pharm Connection Workshop",
+  "main": "index.html",
+  "scripts": {
+    "build": "echo 'No build step required'",
+    "dev": "netlify dev",
+    "serve": "python -m http.server 8080"
+  },
+  "dependencies": {
+    "node-fetch": "^2.7.0"
+  },
+  "devDependencies": {
+    "netlify-cli": "^17.0.0"
+  },
+  "keywords": [
+    "pharmacy",
+    "marketing",
+    "workshop",
+    "ai",
+    "typhoon"
+  ],
+  "author": "Wirun Wetsiri",
+  "license": "MIT"
+}
